@@ -257,6 +257,7 @@ export default class Form extends Component<FormProps, FormState> {
                                             placeholder='John Doe'
                                             onChange={this.onInputChange.bind(this, 'name')}
                                             required={!this.state.customValidation}
+                                            disabled={this.state.submissionResult.success}
                                         />
                                         <div className="invalid-feedback">
                                             {this.state.inputErrors.name}
@@ -276,6 +277,7 @@ export default class Form extends Component<FormProps, FormState> {
                                             placeholder='doe@example.com'
                                             onChange={this.onInputChange.bind(this, 'email')}
                                             required={!this.state.customValidation}
+                                            disabled={this.state.submissionResult.success}
                                         />
                                         <div className="invalid-feedback">
                                             {this.state.inputErrors.email}
@@ -297,6 +299,7 @@ export default class Form extends Component<FormProps, FormState> {
                                                 onChange={this.onInputChange.bind(this, 'password')}
                                                 autoComplete='on'
                                                 required={!this.state.customValidation}
+                                                disabled={this.state.submissionResult.success}
                                             />
                                             <div className="input-group-append">
                                                 <button
@@ -328,6 +331,7 @@ export default class Form extends Component<FormProps, FormState> {
                                             value={this.state.inputValues.occupation}
                                             onChange={this.onInputChange.bind(this, 'occupation')}
                                             required={!this.state.customValidation}
+                                            disabled={this.state.submissionResult.success}
                                         >
                                             {this.state.occupations.map(occ => (
                                                 <option key={occ}>{occ}</option>
@@ -350,6 +354,7 @@ export default class Form extends Component<FormProps, FormState> {
                                             value={this.state.inputValues.state}
                                             onChange={this.onInputChange.bind(this, 'state')}
                                             required={!this.state.customValidation}
+                                            disabled={this.state.submissionResult.success}
                                         >
                                             {this.state.states.map(({ name, abbreviation }) => (
                                                 <option key={name} data-tokens={`${abbreviation} ${name}`}>{name}</option>
