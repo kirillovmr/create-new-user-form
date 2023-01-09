@@ -1,0 +1,24 @@
+/* Remove Bootstrap button focus outline */
+.btn:focus {
+    box-shadow: none;
+}
+
+#form {
+    padding-top: 50px
+}
+
+#form .form-wrap {
+    width: 30%;
+    margin: 0 auto;
+}
+
+#form h1 {
+    font-size: 18px;
+    text-align: center;
+    font-weight: bold;
+    padding-bottom: 20px;
+}
+
+#form .form-group {
+    margin-bottom: 25px;
+}
