@@ -1,6 +1,8 @@
 ## Form Component
 This is a class-based React component for a form that gathers user information such as name, email, password, occupation, and state and POST's it to the user-creation endpoint.
 
+Try it out: [Live demo](https://kirillovmr.github.io/create-new-user-form)
+
 <img width="1572" alt="Screen Shot 2023-01-09 at 8 00 49 PM" src="https://user-images.githubusercontent.com/28753370/211444931-eebf3c09-284a-4065-85e4-035c5ee76f1f.png">
 
 ### Features
