@@ -7,9 +7,8 @@
     padding-top: 50px
 }
 
-#form .form-wrap {
-    width: 30%;
-    margin: 0 auto;
+#form .row {
+    justify-content: center;
 }
 
 #form h1 {
@@ -21,4 +20,9 @@
 
 #form .form-group {
     margin-bottom: 25px;
+}
+
+.btn-radius-fix {
+    border-top-right-radius: 0.25rem !important;
+    border-bottom-right-radius: 0.25rem !important;
 }
