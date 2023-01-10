@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/create-new-user-form/static/css/main.3d9a3dbc.css",
-    "main.js": "/create-new-user-form/static/js/main.ceea0eac.js",
+    "main.css": "/create-new-user-form/static/css/main.9514edbc.css",
+    "main.js": "/create-new-user-form/static/js/main.de8a8090.js",
     "static/js/787.a3b07cd2.chunk.js": "/create-new-user-form/static/js/787.a3b07cd2.chunk.js",
     "index.html": "/create-new-user-form/index.html",
-    "main.3d9a3dbc.css.map": "/create-new-user-form/static/css/main.3d9a3dbc.css.map",
-    "main.ceea0eac.js.map": "/create-new-user-form/static/js/main.ceea0eac.js.map",
+    "main.9514edbc.css.map": "/create-new-user-form/static/css/main.9514edbc.css.map",
+    "main.de8a8090.js.map": "/create-new-user-form/static/js/main.de8a8090.js.map",
     "787.a3b07cd2.chunk.js.map": "/create-new-user-form/static/js/787.a3b07cd2.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.3d9a3dbc.css",
-    "static/js/main.ceea0eac.js"
+    "static/css/main.9514edbc.css",
+    "static/js/main.de8a8090.js"
   ]
 }
