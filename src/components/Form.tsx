@@ -13,7 +13,6 @@ type FormInputKeys = {
 }
 
 type FormProps = {}
-
 type FormState = {
     occupations: string[]
     states: { name: string, abbreviation: string }[]
@@ -109,69 +108,36 @@ export default class Form extends Component<FormProps, FormState> {
     }
 
     /**
-     * Retrieves occupation and state form data
-     */
-    retrieveInitialData() {
-        axios('https://frontend-take-home.fetchrewards.com/form').then(res => {
-            this.setState({
-                ...this.state,
-                occupations: res.data.occupations,
-                states: res.data.states,
-            })
-            setTimeout(() => {
-                this.refreshSelectBoxes()
-                this.setState({
-                    ...this.state,
-                    loading: false,
-                })
-            }, 100)
-        })
-    }
-
-    /**
      * Custom input validation
      *  returns true if all input fields are ok, otherwise false
      */
     validate() {
         const inputErrors = { ...this.state.inputErrors }
-        let error = false
+        let success = true
 
-        if (this.state.inputValues.name.length === 0) {
-            error = true
-            inputErrors.name = 'Please provide a name'
-        }
+        const { inputValues } = this.state
 
-        if (this.state.inputValues.email.length === 0) {
-            error = true
-            inputErrors.email = 'Please provide an email'
-        }
+        // Check for empty field
+        Object.keys(inputValues).forEach(_field => {
+            const field = _field as keyof FormInputKeys
+            if (inputValues[field].length === 0) {
+                success = false
+                inputErrors[field] = `Please provide a ${field}`
+            }
+        })
 
-        if (this.state.inputValues.password.length < 8) {
-            error = true
+        // Custom check for password
+        if (inputValues.password.length < 8) {
+            success = false
             inputErrors.password = 'Password must be at least 8 characters'
         }
 
-        if (this.state.inputValues.password.length === 0) {
-            error = true
-            inputErrors.password = 'Please provide a password'
-        }
-
-        if (this.state.inputValues.occupation.length === 0) {
-            error = true
-            inputErrors.occupation = 'Please provide an occupation'
-        }
-
-        if (this.state.inputValues.state.length === 0) {
-            error = true
-            inputErrors.state = 'Please provide a state'
-        }
-
-        error && this.setState({
+        !success && this.setState({
             ...this.state,
             inputErrors,
         })
 
-        return !error
+        return success
     }
 
     /**
@@ -187,14 +153,19 @@ export default class Form extends Component<FormProps, FormState> {
             submitting: true,
         })
 
+        const { name, email, password, occupation, state } = this.state.inputValues
+
         try {
             const res = await axios.post('https://frontend-take-home.fetchrewards.com/form', {
-                'name': this.state.inputValues.name,
-                'email': this.state.inputValues.email,
-                'password': this.state.inputValues.password,
-                'occupation': this.state.inputValues.occupation,
-                'state': this.state.inputValues.state,
+                name, 
+                email, 
+                password, 
+                occupation, 
+                state, 
             })
+
+            // The form does not return anything besides the payload and request id, 
+            //  so there is no usage for "res" variable.
 
             this.setState({
                 ...this.state,
@@ -205,7 +176,7 @@ export default class Form extends Component<FormProps, FormState> {
                 },
             })
         }
-        catch(e) {
+        catch (e) {
             this.setState({
                 ...this.state,
                 submitting: false,
@@ -217,11 +188,45 @@ export default class Form extends Component<FormProps, FormState> {
         }
     }
 
-    componentDidMount() {
-        this.retrieveInitialData()
+    /**
+     * Retrieves occupation and state form data
+     */
+    async componentDidMount() {
+        try {
+            const res = await axios('https://frontend-take-home.fetchrewards.com/form')
+    
+            this.setState({
+                ...this.state,
+                occupations: res.data.occupations,
+                states: res.data.states,
+            })
+        }
+        catch(e) {
+            this.setState({
+                ...this.state,
+                submissionResult: {
+                    success: false,
+                    text: '⚠️ Unable to load Occupation and State fields data.'
+                }
+            })
+        }
+
+        setTimeout(() => {
+            this.refreshSelectBoxes()
+            this.setState({
+                ...this.state,
+                loading: false,
+            })
+        }, 100)
     }
 
     render() {
+        const { 
+            customValidation, passwordHidden, 
+            inputValues, inputErrors, 
+            submissionResult, loading, submitting, 
+        } = this.state
+
         return (
             <section id="form">
                 <div className="container">
@@ -230,156 +235,165 @@ export default class Form extends Component<FormProps, FormState> {
                             <h1>Create new user</h1>
 
                             {/* Demo setting to toggle between custom and bootstrap's validation */}
-                            <p 
+                            <p
                                 style={{ textDecoration: 'underline', cursor: 'pointer' }}
-                                onClick={() => { 
-                                    this.setState({ 
-                                        ...this.state, 
-                                        customValidation: !this.state.customValidation,
-                                        inputErrors: Object.keys(this.state.inputErrors).reduce((acc, cur) => ({ ...acc, [cur]: '' }), {}) as FormState['inputErrors']
-                                    }) 
+                                onClick={() => {
+                                    this.setState({
+                                        ...this.state,
+                                        customValidation: !customValidation,
+                                        inputErrors: Object.keys(inputErrors).reduce((acc, cur) => ({ ...acc, [cur]: '' }), {}) as FormState['inputErrors']
+                                    })
                                 }}
                             >
-                                {'Toggle: ' + (this.state.customValidation ? 'Custom input validation' : 'Bootstrap input validation')}
+                                {'Toggle: ' + (customValidation ? 'Custom input validation' : 'Bootstrap input validation')}
                             </p>
 
-                            <form onSubmit={this.onSubmit.bind(this)}>
+                            <form onSubmit={e => this.onSubmit(e)}>
 
-                                {/* Full name */}
-                                <div className="form-row">
-                                    <div className='col-12'>
-                                        <label htmlFor='input-name'>Full Name</label>
-                                        <input
-                                            type='text'
-                                            id='input-name'
-                                            className={'form-control' + (this.state.inputErrors.name ? ' is-invalid' : '')}
-                                            value={this.state.inputValues.name}
-                                            placeholder='John Doe'
-                                            onChange={this.onInputChange.bind(this, 'name')}
-                                            required={!this.state.customValidation}
-                                            disabled={this.state.submissionResult.success}
-                                        />
-                                        <div className="invalid-feedback">
-                                            {this.state.inputErrors.name}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Email */}
-                                <div className="form-row">
-                                    <div className='col-12'>
-                                        <label className='mt-3' htmlFor='input-email'>Email</label>
-                                        <input
-                                            type='email'
-                                            id='input-email'
-                                            className={'form-control' + (this.state.inputErrors.email ? ' is-invalid' : '')}
-                                            value={this.state.inputValues.email}
-                                            placeholder='doe@example.com'
-                                            onChange={this.onInputChange.bind(this, 'email')}
-                                            required={!this.state.customValidation}
-                                            disabled={this.state.submissionResult.success}
-                                        />
-                                        <div className="invalid-feedback">
-                                            {this.state.inputErrors.email}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Password */}
-                                <div className="form-row">
-                                    <div className='col-12'>
-                                        <label className='mt-3' htmlFor='input-password'>Password</label>
-                                        <div className="input-group mb-3">
+                                { // Full Name
+                                    <div className="form-row">
+                                        <div className='col-12'>
+                                            <label htmlFor='input-name'>Full Name</label>
                                             <input
-                                                type={this.state.passwordHidden ? 'password' : 'text'}
-                                                id='input-password'
-                                                className={'form-control' + (this.state.inputErrors.password ? ' is-invalid' : '')}
-                                                value={this.state.inputValues.password}
-                                                placeholder='********'
-                                                onChange={this.onInputChange.bind(this, 'password')}
-                                                autoComplete='on'
-                                                required={!this.state.customValidation}
-                                                disabled={this.state.submissionResult.success}
+                                                type='text'
+                                                id='input-name'
+                                                className={`form-control ${inputErrors.name ? 'is-invalid' : ''}`}
+                                                value={inputValues.name}
+                                                placeholder='John Doe'
+                                                onChange={e => this.onInputChange('name', e)}
+                                                required={!customValidation}
+                                                disabled={submissionResult.success}
                                             />
-                                            <div className="input-group-append">
-                                                <button
-                                                    className="btn btn-outline-secondary"
-                                                    type="button"
-                                                    style={{ borderTopRightRadius: '0.25rem', borderBottomRightRadius: '0.25rem' }}
-                                                    onClick={this.togglePassword.bind(this)}
-                                                >
-                                                    {this.state.passwordHidden ? <EyeOff size={16} /> : <Eye size={16} />}
-                                                </button>
-                                            </div>
                                             <div className="invalid-feedback">
-                                                {this.state.inputErrors.password}
+                                                {inputErrors.name}
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                }
+
+                                { // Email
+                                    <div className="form-row">
+                                        <div className='col-12'>
+                                            <label className='mt-3' htmlFor='input-email'>Email</label>
+                                            <input
+                                                type='email'
+                                                id='input-email'
+                                                className={`form-control ${inputErrors.email ? 'is-invalid' : ''}`}
+                                                value={inputValues.email}
+                                                placeholder='doe@example.com'
+                                                onChange={e => this.onInputChange('email', e)}
+                                                required={!customValidation}
+                                                disabled={submissionResult.success}
+                                            />
+                                            <div className="invalid-feedback">
+                                                {inputErrors.email}
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+
+                                { // Password
+                                    <div className="form-row">
+                                        <div className='col-12'>
+                                            <label className='mt-3' htmlFor='input-password'>Password</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    type={passwordHidden ? 'password' : 'text'}
+                                                    id='input-password'
+                                                    className={`form-control ${inputErrors.password ? 'is-invalid' : ''}`}
+                                                    value={inputValues.password}
+                                                    placeholder='********'
+                                                    onChange={e => this.onInputChange('password', e)}
+                                                    autoComplete='on'
+                                                    required={!customValidation}
+                                                    disabled={submissionResult.success}
+                                                />
+                                                <div className="input-group-append">
+                                                    <button
+                                                        className="btn btn-outline-secondary"
+                                                        type="button"
+                                                        style={{ borderTopRightRadius: '0.25rem', borderBottomRightRadius: '0.25rem' }}
+                                                        onClick={() => this.togglePassword()}
+                                                    >
+                                                        {passwordHidden ? <EyeOff size={16} /> : <Eye size={16} />}
+                                                    </button>
+                                                </div>
+                                                <div className="invalid-feedback">
+                                                    {inputErrors.password}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
 
                                 <div className="form-row">
 
-                                    {/* Occupation */}
-                                    <div className='col-6'>
-                                        <label className='mt-3' htmlFor='input-occupation'>Occupation</label>
-                                        <select
-                                            id='input-occupation'
-                                            className='selectpicker form-control'
-                                            title="Choose occupation..."
-                                            data-live-search="true"
-                                            value={this.state.inputValues.occupation}
-                                            onChange={this.onInputChange.bind(this, 'occupation')}
-                                            required={!this.state.customValidation}
-                                            disabled={this.state.submissionResult.success}
-                                        >
-                                            {this.state.occupations.map(occ => (
-                                                <option key={occ}>{occ}</option>
-                                            ))}
-                                        </select>
-                                        <div style={{ display: 'none' }} className={'form-control' + (this.state.inputErrors.occupation ? ' is-invalid' : '')}></div>
-                                        <div className="invalid-feedback">
-                                            {this.state.inputErrors.occupation}
+                                    { // Occupation
+                                        <div className='col-6'>
+                                            <label className='mt-3' htmlFor='input-occupation'>Occupation</label>
+                                            <select
+                                                id='input-occupation'
+                                                className='selectpicker form-control'
+                                                title="Choose occupation..."
+                                                data-live-search="true"
+                                                value={inputValues.occupation}
+                                                onChange={e => this.onInputChange('occupation', e)}
+                                                required={!customValidation}
+                                                disabled={submissionResult.success}
+                                            >
+                                                {this.state.occupations.map(occ => (
+                                                    <option key={occ}>{occ}</option>
+                                                ))}
+                                            </select>
+                                            <div style={{ display: 'none' }} className={`form-control ${inputErrors.occupation ? 'is-invalid' : ''}`}></div>
+                                            <div className="invalid-feedback">
+                                                {inputErrors.occupation}
+                                            </div>
                                         </div>
-                                    </div>
+                                    }
 
-                                    {/* State */}
-                                    <div className='col-6'>
-                                        <label className='mt-3' htmlFor='input-state'>State</label>
-                                        <select
-                                            id='input-state'
-                                            className='selectpicker form-control'
-                                            title="Choose state..."
-                                            data-live-search="true"
-                                            value={this.state.inputValues.state}
-                                            onChange={this.onInputChange.bind(this, 'state')}
-                                            required={!this.state.customValidation}
-                                            disabled={this.state.submissionResult.success}
-                                        >
-                                            {this.state.states.map(({ name, abbreviation }) => (
-                                                <option key={name} data-tokens={`${abbreviation} ${name}`}>{name}</option>
-                                            ))}
-                                        </select>
-                                        <div style={{ display: 'none' }} className={'form-control' + (this.state.inputErrors.state ? ' is-invalid' : '')}></div>
-                                        <div className="invalid-feedback">
-                                            {this.state.inputErrors.state}
+                                    { // State
+                                        <div className='col-6'>
+                                            <label className='mt-3' htmlFor='input-state'>State</label>
+                                            <select
+                                                id='input-state'
+                                                className='selectpicker form-control'
+                                                title="Choose state..."
+                                                data-live-search="true"
+                                                value={inputValues.state}
+                                                onChange={e => this.onInputChange('state', e)}
+                                                required={!customValidation}
+                                                disabled={submissionResult.success}
+                                            >
+                                                {this.state.states.map(({ name, abbreviation }) => (
+                                                    <option key={name} data-tokens={`${abbreviation} ${name}`}>{name}</option>
+                                                ))}
+                                            </select>
+                                            <div style={{ display: 'none' }} className={`form-control ${inputErrors.state ? 'is-invalid' : ''}`}></div>
+                                            <div className="invalid-feedback">
+                                                {inputErrors.state}
+                                            </div>
                                         </div>
-                                    </div>
+                                    }
 
                                 </div>
 
                                 {/* Submisson result */}
                                 <div className="mt-4">
-                                    <p className={this.state.submissionResult.success ? 'text-success' : 'text-danger'}>
-                                        {this.state.submissionResult.text}
+                                    <p className={submissionResult.success ? 'text-success' : 'text-danger'}>
+                                        {submissionResult.text}
                                     </p>
                                 </div>
 
-                                {/* Submit */}
+                                {/* Submission button */}
                                 <div className="form-row">
-                                    <button className={'btn mt-3 w-100 btn-' + (this.state.submissionResult.success ? 'success' : 'primary')} type="submit" disabled={this.state.loading || this.state.submitting || this.state.submissionResult.success}>
-                                        {(this.state.loading || this.state.submitting) && <span className="spinner-border spinner-border-sm mr-2" role="status" aria-hidden="true"></span>}
-                                        {this.state.loading ? 'Loading' : this.state.submitting ? 'Submitting' : 'Create user'}
+                                    <button 
+                                        className={`btn mt-3 w-100 btn-${submissionResult.success ? 'success' : 'primary'}`}
+                                        type="submit" 
+                                        disabled={loading || submitting || submissionResult.success}
+                                    >
+                                        {(loading || submitting) && <span className="spinner-border spinner-border-sm mr-2" role="status" aria-hidden="true"></span>}
+                                        {loading ? 'Loading' : submitting ? 'Submitting' : 'Create user'}
                                     </button>
                                 </div>
                             </form>
